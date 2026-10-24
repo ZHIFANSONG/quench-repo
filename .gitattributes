@@ -1,0 +1,8 @@
+# Keep the C# sources exactly as authored — they are UTF-8 with a BOM and the
+# compiler needs that BOM to read the Chinese strings correctly.
+*.cs -text
+*.bat text eol=crlf
+*.md text eol=lf
+*.yml text eol=lf
+*.ico binary
+*.png binary

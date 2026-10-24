@@ -1,0 +1,47 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Build
+        shell: cmd
+        run: build.bat
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          if (-not (Test-Path Quench.exe)) { throw "Quench.exe was not produced" }
+          $size = (Get-Item Quench.exe).Length
+          Write-Host "Quench.exe $size bytes"
+          if ($size -lt 20000) { throw "Quench.exe looks too small: $size bytes" }
+          $v = (Get-Item Quench.exe).VersionInfo
+          Write-Host "version $($v.FileVersion)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quench
+          path: Quench.exe
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Quench.exe
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false

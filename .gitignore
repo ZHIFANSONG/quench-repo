@@ -1,0 +1,19 @@
+# Build output
+Quench.exe
+*.pdb
+*.obj
+
+# Helper output
+quench-result.txt
+
+# Working screenshots (the curated ones live in docs/screenshots)
+shot1.png
+shot-live.png
+shot-off.png
+shot-dialog.png
+shot-result.png
+crop1.png
+crop-left.png
+
+# Tool scratch
+tools/*.exe
