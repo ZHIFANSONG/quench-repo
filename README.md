@@ -14,9 +14,11 @@ can disable that GPU entirely so it stops drawing power — without touching the
 ## Why
 
 On a hybrid-graphics laptop the discrete GPU is not off just because nothing is
-rendering on it. It parks in a low-power state and keeps sipping power — typically
-**10–20 W** with no display attached — and jumps to **25–40 W** the moment a background
-app touches its context, even if that app is doing nothing with it.
+rendering on it. It parks in a low-power state and keeps sipping power — roughly
+**10–30 W** in its lowest performance state, even with no display attached — and bursts
+to **25–40 W** whenever a browser tab, a game launcher or the vendor app touches its
+context, even if that app is doing nothing useful with it. Between those touches the GPU
+does drop to D3 on its own, but anything that polls it drags it straight back out.
 
 Windows has no supported way to say "use the integrated GPU only" from the desktop.
 The firmware setting is usually binary (hybrid ⇄ discrete), so the only way to reach a
@@ -136,6 +138,12 @@ Windows tooling will otherwise read the Chinese strings as ANSI.
   routing but cannot change it — that still needs the BIOS or the vendor utility.
 - Resuming from sleep, driver updates or a BIOS update can re-enable the device. Just
   press the button again.
+- Disabling removes the device from the driver stack, but it does not remove it from the
+  PCI bus: Device Manager still lists it, greyed out with a "disabled" code. That is
+  normal; the card itself sits in D3 and its driver is unloaded.
+- Whole-machine draw is dominated by the CPU, the panel (high refresh rate at full
+  brightness is expensive) and whatever else is running. Quench only accounts for the
+  discrete GPU's own share — measure the wall socket, not the app, if you want the total.
 - Developed and verified on a hybrid-graphics laptop (AMD iGPU + NVIDIA dGPU, Windows 10
   64-bit). Other hybrid laptops should behave the same way, but the routing detection is
   the part most likely to need tweaks on unusual hardware — issues with your `--status`

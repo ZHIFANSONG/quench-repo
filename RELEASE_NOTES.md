@@ -20,9 +20,11 @@ to act on the answer:
 2. **How much power is the discrete GPU drawing right now?** Real wattage straight from
    NVML, plus temperature, clocks, PCIe link width and VRAM.
 
-Then one button **disables the discrete GPU**, which takes it from 10–20 W idle (or
-25–40 W when something pokes it) to a true 0 W. It is the same mechanism Device Manager
-uses, so it is fully reversible, needs no reboot, and never touches the BIOS.
+Then one button **disables the discrete GPU**, which takes it from 10–30 W of idle draw
+(bursting to 25–40 W whenever something pokes it) to zero: the device is powered down to
+D3 and its driver is unloaded, so no app can wake it again. It is the same mechanism
+Device Manager uses, so it is fully reversible, needs no reboot, and never touches the
+BIOS.
 
 ### Highlights
 
@@ -74,7 +76,7 @@ Quench 回答关于双显卡笔记本的两个问题，然后给你一个开关�
 1. **我的屏幕到底接在哪块显卡上？** 它枚举显示适配器并解析每台已接入显示器的 EDID，所以图里画的是物理接线——内屏挂在核显上，还是被绕到了独显。
 2. **独显此刻真实在耗多少电？** 直接从 NVML 取的真实瓦数，外加温度、频率、PCIe 链路宽度和显存占用。
 
-然后一个按钮**禁用独立显卡**，把它从空载 10~20 W（被程序碰一下就是 25~40 W）变成真正的 0 W。走的是设备管理器同一个机制，所以完全可逆、不用重启、从不碰 BIOS。
+然后一个按钮**禁用独立显卡**，把它从空载 10~30 W（被程序碰一下就是 25~40 W）变成零：设备被下电到 D3、驱动被卸载，任何程序都没法再把它唤醒。走的是设备管理器同一个机制，所以完全可逆、不用重启、从不碰 BIOS。
 
 ### 亮点
 
