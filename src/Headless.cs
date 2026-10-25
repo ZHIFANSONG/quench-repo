@@ -20,7 +20,11 @@ namespace Quench
                 log.AppendLine("verb=" + verb);
                 log.AppendLine("elevated=" + Elevation.IsAdministrator());
 
-                if (!Elevation.IsAdministrator())
+                if (PowerSave.IsQuietVerb(verb))
+                {
+                    exitCode = PowerSave.Run(verb, log);
+                }
+                else if (!Elevation.IsAdministrator())
                 {
                     log.AppendLine("error=This helper must run elevated.");
                     exitCode = 3;

@@ -87,7 +87,7 @@ namespace Quench
         public static string LblClocks { get { return P("核心/显存频率", "Clocks"); } }
         public static string LblPcie { get { return P("PCIe 链路", "PCIe link"); } }
         public static string LblMemory { get { return P("显存", "Memory"); } }
-
+        public static string LblSleepShare { get { return P("休眠占比", "Time asleep"); } }
         // ---- device / power state values ----
         public static string StateEnabled { get { return P("已启用", "enabled"); } }
         public static string StateDisabled { get { return P("已禁用", "disabled"); } }
@@ -119,6 +119,51 @@ namespace Quench
         public static string BtnRescan { get { return P("重新扫描", "Rescan"); } }
         public static string SubDisable { get { return P("功耗直接归零，随时可恢复", "Cuts it to 0 W until you turn it back on"); } }
         public static string SubEnable { get { return P("恢复独显，游戏才能提速", "Restores the dGPU for gaming"); } }
+
+        // ---- deep sleep (vendor service) ----
+        public static string BtnQuietOn { get { return P("深度省电", "Deep sleep"); } }
+        public static string BtnQuietOff { get { return P("恢复正常", "Back to normal"); } }
+        public static string SubQuietOn { get { return P("关掉厂商后台轮询，让独显真正睡下去", "Stops the vendor poller so the dGPU stays asleep"); } }
+        public static string SubQuietOff { get { return P("恢复厂商控制台的全部功能", "Restores every vendor control-centre feature"); } }
+        public static string QuietUnsupported { get { return P("未检测到厂商控制台", "No vendor control centre found"); } }
+        public static string StQuietOn { get { return P("正在进入深度省电…", "Entering deep sleep…"); } }
+        public static string StQuietOff { get { return P("正在恢复正常模式…", "Returning to normal…"); } }
+        public static string StQuietDone { get { return P("已进入深度省电：厂商后台已停止，独显不会被轮询唤醒。", "Deep sleep is on — the vendor poller is stopped and nothing wakes the GPU."); } }
+        public static string StQuietBack { get { return P("已恢复正常：厂商控制台的功能全部回来了。", "Back to normal — every vendor control-centre feature is available again."); } }
+        public static string QuietPill { get { return P("深度省电", "Deep sleep"); } }
+
+        public static string QuietNote
+        {
+            get
+            {
+                return P("厂商控制台每隔几秒就要读一次独显状态，每读一次都会把独显从休眠中吵醒，所以它一直醒着耗电。进入深度省电会停掉这个后台服务，独显随即稳定休眠。代价：风扇手动调速、性能模式、灯效、显卡模式切换暂时用不了（已设好的值不会丢）。游戏不受影响。",
+                         "The vendor control centre polls the discrete GPU every few seconds to draw its dashboard, and every poll pulls the GPU out of sleep — which is why it never powers down. Deep sleep stops that background service, and the GPU stays asleep. Trade-off: fan curves, performance modes, lighting and GPU-mode switching are unavailable until you switch back (saved settings are kept). Games are unaffected.");
+            }
+        }
+
+        public static string QuietConfirm
+        {
+            get
+            {
+                return P(
+                    "停掉厂商控制台的后台服务后，独显才会真正进入休眠。\r\n\r\n" +
+                    "深度省电期间：\r\n" +
+                    "  ·  独显稳定休眠，功耗接近 0。\r\n" +
+                    "  ·  厂商控制台显示\u201c未连接\u201d，风扇手动调速 / 性能模式 / 灯效 / 显卡模式切换暂时不可用。\r\n" +
+                    "  ·  已经设好的风扇曲线、灯效等不会被改掉。\r\n" +
+                    "  ·  游戏、跑分、CUDA 完全不受影响。\r\n" +
+                    "  ·  随时可以点\u201c恢复正常\u201d把它开回来。\r\n\r\n" +
+                    "现在进入深度省电吗？",
+                    "Stopping the vendor control centre's background service is what actually lets the discrete GPU sleep.\r\n\r\n" +
+                    "While deep sleep is on:\r\n" +
+                    "  •  The dGPU stays asleep and draws close to 0 W.\r\n" +
+                    "  •  The vendor control centre shows \"not connected\": fan curves, performance modes, lighting and GPU-mode switching are unavailable.\r\n" +
+                    "  •  Settings you already saved (fan curves, lighting) are kept.\r\n" +
+                    "  •  Games, benchmarks and CUDA are completely unaffected.\r\n" +
+                    "  •  Click \"Back to normal\" at any time to bring it all back.\r\n\r\n" +
+                    "Turn on deep sleep now?");
+            }
+        }
 
         // ---- pills ----
         public static string PillAdmin { get { return P("管理员", "Administrator"); } }

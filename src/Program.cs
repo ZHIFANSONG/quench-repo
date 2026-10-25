@@ -33,7 +33,10 @@ namespace Quench
 
     internal static class CommandLine
     {
-        /// <summary>Returns "enable", "disable" or "status" when Quench was started headless.</summary>
+        /// <summary>
+        /// Returns "enable", "disable", "status", "quiet-on", "quiet-off" or "quiet-status"
+        /// when Quench was started headless.
+        /// </summary>
         public static string Verb(string[] args)
         {
             if (args == null) return null;
@@ -43,6 +46,9 @@ namespace Quench
                 if (a == "--disable" || a == "-disable") return "disable";
                 if (a == "--enable" || a == "-enable") return "enable";
                 if (a == "--status" || a == "-status") return "status";
+                if (a == "--quiet-on" || a == "-quiet-on") return "quiet-on";
+                if (a == "--quiet-off" || a == "-quiet-off") return "quiet-off";
+                if (a == "--quiet-status" || a == "-quiet-status") return "quiet-status";
             }
             return null;
         }

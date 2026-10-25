@@ -31,10 +31,12 @@ namespace Quench
         private readonly MonitorList _monitors = new MonitorList();
 
         private readonly ActionButton _toggle = new ActionButton();
+        private readonly ActionButton _quiet = new ActionButton();
         private readonly ActionButton _refresh = new ActionButton();
         private readonly ActionButton _lang = new ActionButton();
         private readonly Pill _adminPill = new Pill();
         private readonly Pill _routePill = new Pill();
+        private readonly Pill _quietPill = new Pill();
 
         private readonly Timer _timer = new Timer();
 
@@ -47,6 +49,7 @@ namespace Quench
         private bool _busy;
         private int _ticks;
         private string _status = "";
+        private QuietState _quietState = new QuietState();
 
         public MainForm()
         {
@@ -79,6 +82,9 @@ namespace Quench
             _toggle.Cursor = Cursors.Hand;
             _toggle.Click += delegate { ToggleDgpu(); };
 
+            _quiet.Cursor = Cursors.Hand;
+            _quiet.Click += delegate { ToggleQuiet(); };
+
             _refresh.Primary = false;
             _refresh.Accent = Theme.BorderStrong;
             _refresh.Click += delegate { RefreshAll(true); };
@@ -97,18 +103,22 @@ namespace Quench
             _adminPill.Filled = true;
             _routePill.ShowDot = true;
             _routePill.Filled = true;
+            _quietPill.ShowDot = true;
+            _quietPill.Filled = true;
 
             Controls.Add(_toggle);
+            Controls.Add(_quiet);
             Controls.Add(_refresh);
             Controls.Add(_lang);
             Controls.Add(_adminPill);
             Controls.Add(_routePill);
+            Controls.Add(_quietPill);
 
             ResumeLayout(false);
 
             Theme.Scale = ComputeScale();
-            ClientSize = new Size(Theme.S(950), Theme.S(604));
-            MinimumSize = new Size(Theme.S(880), Theme.S(600));
+            ClientSize = new Size(Theme.S(950), Theme.S(668));
+            MinimumSize = new Size(Theme.S(880), Theme.S(660));
 
             ApplyStaticText();
 
@@ -143,6 +153,7 @@ namespace Quench
 
             _refresh.Text = Loc.BtnRescan;
             _lang.Text = Loc.English ? "中文" : "EN";
+            _quietPill.Text = Loc.QuietPill;
 
             Text = "Quench";
             Invalidate(true);
@@ -205,7 +216,7 @@ namespace Quench
             int pad = Theme.S(24);
             int headerH = Theme.S(72);
             int gap = Theme.S(14);
-            int footerH = Theme.S(82);
+            int footerH = Theme.S(124);
 
             int w = ClientSize.Width - pad * 2;
             int h = ClientSize.Height - headerH - footerH;
@@ -247,13 +258,17 @@ namespace Quench
             _monitors.Bounds = new Rectangle(Theme.S(20), Theme.S(58), w - Theme.S(40), Math.Max(Theme.S(48), listH - Theme.S(74)));
 
             int footerY = ClientSize.Height - footerH + Theme.S(10);
-            _toggle.Bounds = new Rectangle(pad, footerY, Theme.S(300), Theme.S(52));
-            _refresh.Bounds = new Rectangle(pad + Theme.S(312), footerY, Theme.S(104), Theme.S(52));
-            _lang.Bounds = new Rectangle(pad + Theme.S(428), footerY + Theme.S(6), Theme.S(56), Theme.S(40));
+            _toggle.Bounds = new Rectangle(pad, footerY, Theme.S(280), Theme.S(52));
+            _quiet.Bounds = new Rectangle(pad + Theme.S(292), footerY, Theme.S(250), Theme.S(52));
 
-            int pillY = footerY + (Theme.S(52) - Theme.S(24)) / 2;
-            _adminPill.Bounds = new Rectangle(pad + Theme.S(508), pillY, Theme.S(126), Theme.S(24));
-            _routePill.Bounds = new Rectangle(pad + Theme.S(646), pillY, Theme.S(190), Theme.S(24));
+            int row2 = footerY + Theme.S(60);
+            _refresh.Bounds = new Rectangle(pad, row2, Theme.S(104), Theme.S(34));
+            _lang.Bounds = new Rectangle(pad + Theme.S(116), row2, Theme.S(56), Theme.S(34));
+
+            int pillY = row2 + (Theme.S(34) - Theme.S(24)) / 2;
+            _adminPill.Bounds = new Rectangle(pad + Theme.S(188), pillY, Theme.S(126), Theme.S(24));
+            _routePill.Bounds = new Rectangle(pad + Theme.S(326), pillY, Theme.S(190), Theme.S(24));
+            _quietPill.Bounds = new Rectangle(pad + Theme.S(528), pillY, Theme.S(126), Theme.S(24));
 
             _routePill.Text = _route.IsDirect ? Loc.PillDirect : Loc.PillViaIgpu;
             _routePill.Accent = _route.IsDirect ? Theme.Amber : Theme.Accent;
@@ -278,6 +293,8 @@ namespace Quench
                     {
                         if (devices[i].Vendor == GpuVendor.Nvidia) { _dgpu = devices[i]; break; }
                     }
+                    try { _quietState = PowerSave.Probe(); }
+                    catch { _quietState = new QuietState(); }
                 }
 
                 // Cheap and passive: reading the device power state wakes nothing.
@@ -522,6 +539,45 @@ namespace Quench
             }
             _toggle.Invalidate();
 
+            // ---- deep sleep button ----
+            if (!_quietState.Supported)
+            {
+                _quiet.Text = Loc.BtnQuietOn;
+                _quiet.SubText = Loc.QuietUnsupported;
+                _quiet.Primary = false;
+                _quiet.Accent = Theme.BorderStrong;
+                _quiet.Enabled = false;
+            }
+            else if (_quietState.Active)
+            {
+                _quiet.Text = Loc.BtnQuietOff;
+                _quiet.SubText = Loc.SubQuietOff;
+                _quiet.Primary = false;
+                _quiet.Accent = Theme.Green;
+                _quiet.Enabled = true;
+            }
+            else
+            {
+                _quiet.Text = Loc.BtnQuietOn;
+                _quiet.SubText = Loc.SubQuietOn;
+                _quiet.Primary = true;
+                _quiet.Accent = Theme.Accent;
+                _quiet.Enabled = true;
+            }
+            _quiet.Invalidate();
+
+            if (_quietState.Supported && _quietState.Active)
+            {
+                _quietPill.Text = Loc.QuietPill;
+                _quietPill.Accent = Theme.Accent;
+            }
+            else
+            {
+                _quietPill.Text = Loc.QuietPill;
+                _quietPill.Accent = Theme.TextMuted;
+            }
+            _quietPill.Invalidate();
+
             bool admin = Elevation.IsAdministrator();
             _adminPill.Text = admin ? Loc.PillAdmin : Loc.PillUser;
             _adminPill.Accent = admin ? Theme.Accent : Theme.TextSecondary;
@@ -603,6 +659,71 @@ namespace Quench
                 if (_nvml != null) { _nvml.Dispose(); _nvml = null; }
                 _telemetryAge = -1;
                 System.Threading.Thread.Sleep(500);
+                RefreshAll(true);
+            }
+        }
+        private void ToggleQuiet()
+        {
+            bool on = !_quietState.Active;
+
+            if (on)
+            {
+                DialogResult r = MessageBox.Show(this, Loc.QuietConfirm, Loc.BtnQuietOn,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (r != DialogResult.Yes) return;
+            }
+
+            RunQuiet(on);
+        }
+
+        private void RunQuiet(bool on)
+        {
+            string verb = on ? "--quiet-on" : "--quiet-off";
+            _quiet.Enabled = false;
+            _toggle.Enabled = false;
+            _status = on ? Loc.StQuietOn : Loc.StQuietOff;
+            Invalidate();
+            Application.DoEvents();
+
+            try
+            {
+                if (Elevation.IsAdministrator())
+                {
+                    string error;
+                    bool ok = PowerSave.SetQuiet(on, out error);
+                    _status = ok ? (on ? Loc.StQuietDone : Loc.StQuietBack) : (error ?? Loc.StFailed);
+                }
+                else
+                {
+                    Headless.TakeResult();
+                    string error;
+                    bool started = Elevation.RunElevated(verb, out error);
+                    string result = Headless.TakeResult();
+                    string changed = Headless.Field(result, "changed");
+                    if (started && changed == "True")
+                    {
+                        _status = on ? Loc.StQuietDone : Loc.StQuietBack;
+                    }
+                    else
+                    {
+                        string detail = Headless.Field(result, "error");
+                        if (string.IsNullOrEmpty(detail)) detail = error;
+                        if (string.IsNullOrEmpty(detail)) detail = Loc.StNoHelper;
+                        _status = detail;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _status = Loc.StError + ex.Message;
+            }
+            finally
+            {
+                _quiet.Enabled = true;
+                _toggle.Enabled = true;
+                if (_nvml != null) { _nvml.Dispose(); _nvml = null; }
+                _telemetryAge = -1;
+                System.Threading.Thread.Sleep(400);
                 RefreshAll(true);
             }
         }
